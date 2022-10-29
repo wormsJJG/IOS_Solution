@@ -11,6 +11,11 @@ class MainViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        configureUI()
+    }
+    
+    private func configureUI() {
+        self.view.backgroundColor = .white
+        self.navigationController?.title = "sss"
     }
 }

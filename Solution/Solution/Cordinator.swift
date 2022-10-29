@@ -9,11 +9,9 @@ import UIKit
 
 class Cordinator {
     let window: UIWindow
-    
     init(window: UIWindow) {
         self.window = window
     }
-    
     func start() {
         let rootViewContoller = MainViewController()
         let navigationRootViewController = UINavigationController(rootViewController: rootViewContoller)
