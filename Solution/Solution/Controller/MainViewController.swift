@@ -18,6 +18,17 @@ class MainViewController: UIViewController {
         
         return collectionView
     }()
+    
+    private let plusButton: UIButton = {
+        let button = UIButton().then {
+            $0.tintColor = UIColor.navigationTitleColor
+            let imageConfig = UIImage.SymbolConfiguration(pointSize: 25)
+            let image = UIImage(systemName: "plus", withConfiguration: imageConfig)
+            $0.setImage(image, for: .normal)
+        }
+        
+        return button
+    }()
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,6 +46,7 @@ class MainViewController: UIViewController {
         self.navigationController?.navigationBar.prefersLargeTitles = true
         self.navigationItem.title = "고민카드"
         self.navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: UIColor.navigationTitleColor!]
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: plusButton)
     }
     
     private func configureCollectionView() {
