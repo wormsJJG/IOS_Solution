@@ -22,14 +22,31 @@ class SolutionCell: UICollectionViewCell {
         return label
     }()
     
+    private let menuButton: UIButton = {
+        let button = UIButton().then {
+            let imageConfig = UIImage.SymbolConfiguration(pointSize: 25)
+            let image = UIImage(systemName: "ellipsis", withConfiguration: imageConfig)
+            $0.setImage(image, for: .normal)
+            
+            $0.tintColor = .white
+        }
+        
+        return button
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setCellLayer()
-        configureTitleLabel()
+        configureUI()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func configureUI() {
+        setCellLayer()
+        configureTitleLabel()
+        configureMenuButton()
     }
     
     private func setCellLayer() {
@@ -43,11 +60,21 @@ class SolutionCell: UICollectionViewCell {
     
     private func configureTitleLabel() {
         self.addSubview(titleLabel)
+        
         titleLabel.snp.makeConstraints { label in
             label.left.equalTo(self.safeAreaLayoutGuide.snp.left).offset(15)
             label.right.equalTo(self.safeAreaLayoutGuide.snp.right).offset(-15)
             label.top.equalTo(self.safeAreaLayoutGuide.snp.top).offset(60)
-//            label.centerY.equalToSuperview()
+        }
+    }
+    
+    private func configureMenuButton() {
+        self.addSubview(menuButton)
+        
+        menuButton.snp.makeConstraints { button in
+            button.width.height.equalTo(36)
+            button.top.equalTo(self.safeAreaLayoutGuide.snp.top)
+            button.right.equalTo(self.safeAreaLayoutGuide.snp.right).offset(-8)
         }
     }
 }
