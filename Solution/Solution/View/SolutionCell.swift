@@ -27,8 +27,8 @@ class SolutionCell: UICollectionViewCell {
             let imageConfig = UIImage.SymbolConfiguration(pointSize: 25)
             let image = UIImage(systemName: "ellipsis", withConfiguration: imageConfig)
             $0.setImage(image, for: .normal)
-            
             $0.tintColor = .white
+            $0.showsMenuAsPrimaryAction = true
         }
         
         return button
@@ -69,6 +69,15 @@ class SolutionCell: UICollectionViewCell {
     }
     
     private func configureMenuButton() {
+        let deleteSolution = UIAction(title: "고민 삭제", handler: { _ in
+            print("삭제 액션")
+        })
+        let cancel = UIAction(title: "취소", handler: { _ in
+            
+        })
+        let menu = UIMenu(children: [deleteSolution, cancel])
+        menuButton.menu = menu
+        
         self.addSubview(menuButton)
         
         menuButton.snp.makeConstraints { button in
