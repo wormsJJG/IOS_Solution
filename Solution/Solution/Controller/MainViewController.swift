@@ -13,8 +13,7 @@ class MainViewController: UIViewController {
     private let cellID: String = "solutionCell"
     // MARK: - UI Component
     private let solutionCollectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         
         return collectionView
     }()
@@ -46,6 +45,7 @@ class MainViewController: UIViewController {
         self.navigationController?.navigationBar.prefersLargeTitles = true
         self.navigationItem.title = "고민카드"
         self.navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: UIColor.navigationTitleColor!]
+        plusButton.addTarget(self, action: #selector(didTapAddSolutionButton), for: .touchDown)
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: plusButton)
     }
     
@@ -63,6 +63,11 @@ class MainViewController: UIViewController {
             collectionView.right.equalTo(self.view.snp.right)
         }
     }
+    // MARK: - Action
+    @objc func didTapAddSolutionButton() {
+        let addView = AddViewController()
+        self.navigationController?.pushViewController(addView, animated: true)
+    }
 }
 
 extension MainViewController: UICollectionViewDelegateFlowLayout {
@@ -75,7 +80,9 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 }
 
 extension MainViewController: UICollectionViewDelegate {
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+
+    }
 }
 
 extension MainViewController: UICollectionViewDataSource {
