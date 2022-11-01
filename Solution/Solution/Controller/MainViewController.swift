@@ -81,7 +81,8 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-
+        let solutionView = SolutionViewController()
+        self.navigationController?.pushViewController(solutionView, animated: true)
     }
 }
 
