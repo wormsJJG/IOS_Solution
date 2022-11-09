@@ -11,5 +11,5 @@ import RealmSwift
 class Solution: Object {
     @objc dynamic var title: String = ""
     @objc dynamic var userCount: Int = 0
-    @objc dynamic var options: [String] = []
+    var options: List<String> = List<String>()
 }

@@ -9,6 +9,7 @@ import UIKit
 import Then
 
 class SolutionCell: UICollectionViewCell {
+    private var solution: Solution?
     
     private let titleLabel: UILabel = {
         let label = UILabel().then {
@@ -41,6 +42,11 @@ class SolutionCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func bindData(in solution: Solution) {
+        self.solution = solution
+        self.titleLabel.text = solution.title
     }
     
     private func configureUI() {

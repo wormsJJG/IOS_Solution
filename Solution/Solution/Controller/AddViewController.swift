@@ -9,20 +9,21 @@ import UIKit
 import TweeTextField
 import SnapKit
 import Then
+import RealmSwift
 
 class AddViewController: UIViewController {
     private let cellID: String = "OptionCell"
-    
+    private let realm = try! Realm()
+    private var solutionTitle: String = ""
+    private var optionList: [String] = []
     // MARK: - UI Component
     private let addSolutionButton: UIButton = {
         let button = UIButton().then {
             $0.setTitle("추가하기", for: .normal)
             $0.setTitleColor(.navigationTitleColor, for: .normal)
         }
-        
         return button
     }()
-    
     private let titleTextField: TweeAttributedTextField = {
         let textField = TweeAttributedTextField().then {
             $0.tweePlaceholder = "고민"
@@ -36,10 +37,8 @@ class AddViewController: UIViewController {
             $0.lineColor = .navigationTitleColor!
             $0.lineWidth = 1
         }
-        
         return textField
     }()
-    
     private let optionTextField: TweeAttributedTextField = {
         let textField = TweeAttributedTextField().then {
             $0.tweePlaceholder = "항목"
@@ -53,20 +52,17 @@ class AddViewController: UIViewController {
             $0.lineColor = .navigationTitleColor!
             $0.lineWidth = 1
         }
-        
         return textField
     }()
-    
     private let optionCollectionView: UICollectionView = {
         let collectionview = UICollectionView(frame: .zero, collectionViewLayout: CollectionViewLeftAlignFlowLayout())
-        
         return collectionview
     }()
-    
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        configureDelegate()
     }
     
     // MARK: - Configure
@@ -76,6 +72,11 @@ class AddViewController: UIViewController {
         configureTitleTextField()
         configureOptionTextField()
         configureOptionCollectionView()
+    }
+    
+    private func configureDelegate() {
+        titleTextField.delegate = self
+        optionTextField.delegate = self
     }
     
     private func configureNavigationItem() {
@@ -127,7 +128,13 @@ class AddViewController: UIViewController {
     }
     // MARK: - Action
     @objc func didTapPlusSolution() {
-        print("tap")
+        let solution = Solution()
+        solution.title = solutionTitle
+        solution.options.append(objectsIn: optionList)
+        DispatchQueue.main.async { [self] in
+            RealmManager.addSolution(in: solution, with: self.realm)
+            navigationController?.popViewController(animated: true)
+        }
     }
 }
 
@@ -137,12 +144,22 @@ extension AddViewController: UICollectionViewDelegate {
 
 extension AddViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 1
+        if optionList.count != 0 {
+            return optionList.count
+        } else {
+            return 1
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: self.cellID, for: indexPath) as? OptionCell else {
             return UICollectionViewCell()
+        }
+        
+        if optionList.count != 0 {
+            cell.bindCellData(option: optionList[indexPath.item])
+        } else {
+            cell.plainSetting()
         }
         
         return cell
@@ -169,5 +186,26 @@ class CollectionViewLeftAlignFlowLayout: UICollectionViewFlowLayout {
             maxY = max(layoutAttribute.frame.maxY, maxY)
         }
         return attributes
+    }
+}
+// MARK: - TextFieldExtension
+extension AddViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        switch textField {
+        case self.titleTextField:
+            self.solutionTitle = textField.text!
+        case self.optionTextField:
+            self.optionList.append(textField.text!)
+            DispatchQueue.main.async {
+                self.optionCollectionView.reloadData()
+                self.optionTextField.text = ""
+            }
+        default:
+            return
+        }
     }
 }

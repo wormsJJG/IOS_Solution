@@ -37,6 +37,14 @@ class OptionCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func plainSetting() {
+        self.optionLabel.text = "항목을 추가해보세요!"
+    }
+    
+    func bindCellData(option: String) {
+        self.optionLabel.text = option
+    }
+    
     private func configureUI() {
         self.backgroundColor = .navigationTitleColor!
         self.layer.cornerRadius = 19

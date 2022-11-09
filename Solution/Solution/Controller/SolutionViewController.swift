@@ -9,7 +9,7 @@ import UIKit
 
 class SolutionViewController: UIViewController {
     private let cellID: String = "OptionCell"
-    
+    var solution: Solution?
     // MARK: - UI Component
     private let optionCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: CollectionViewLeftAlignFlowLayout())
@@ -40,7 +40,11 @@ class SolutionViewController: UIViewController {
     
     private func configureNavigationItem() {
         self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.navigationItem.title = "제목"
+        if let title = solution?.title {
+            self.navigationItem.title = title
+        } else {
+            self.navigationItem.title = "Error"
+        }
         self.navigationController?.navigationBar.tintColor = UIColor.navigationTitleColor
         self.navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: UIColor.navigationTitleColor!]
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: self.pickButton)
@@ -71,12 +75,20 @@ extension SolutionViewController: UICollectionViewDelegate {
 }
 extension SolutionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        guard let sol = solution else { return 1 }
+        
+        return sol.options.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellID, for: indexPath) as? OptionCell else {
             return UICollectionViewCell()
+        }
+        
+        if let sol = solution {
+            cell.bindCellData(option: sol.options[indexPath.item])
+        } else {
+            cell.plainSetting()
         }
         
         return cell

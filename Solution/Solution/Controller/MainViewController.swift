@@ -8,9 +8,16 @@
 import UIKit
 import SnapKit
 import Then
+import RealmSwift
+import RxSwift
 
 class MainViewController: UIViewController {
     private let cellID: String = "solutionCell"
+    private let realm = try! Realm()
+    private let disposeBag = DisposeBag()
+    private var solution: [Solution]?
+    private let fileURL = Realm.Configuration.defaultConfiguration.fileURL
+
     // MARK: - UI Component
     private let solutionCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
@@ -32,8 +39,23 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        bindSolution()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        bindSolution()
+    }
+    // MARK: - DataFunction
+    private func bindSolution() {
+        RealmManager.getSolution(in: realm)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] solution in
+                self?.solution = solution
+                self?.solutionCollectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+    }
     // MARK: - Configure
     private func configureUI() {
         self.view.backgroundColor = .white
@@ -82,18 +104,27 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 extension MainViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let solutionView = SolutionViewController()
+        guard let solutions = self.solution else {
+            return
+        }
+        solutionView.solution = solutions[indexPath.item]
         self.navigationController?.pushViewController(solutionView, animated: true)
     }
 }
 
 extension MainViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        guard let solutionList = self.solution else { return 0 }
+        
+        return solutionList.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellID, for: indexPath) as? SolutionCell else {
             return UICollectionViewCell()
+        }
+        if let solutions = self.solution {
+            cell.bindData(in: solutions[indexPath.item])
         }
         
         return cell
