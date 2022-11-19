@@ -10,9 +10,11 @@ import RealmSwift
 import RxSwift
 
 class RealmManager {
-    static func getSolution(in realm: Realm) -> Observable<[Solution]>  {
+    static let realm = try! Realm()
+    
+    static func getSolution() -> Observable<[Solution]>  {
         return Observable.create { event in
-            let solution = realm.objects(Solution.self).map({$0})
+            let solution = RealmManager.realm.objects(Solution.self).map({$0})
             
             if solution.count != 0 {
                 event.onNext(solution.reversed())
@@ -26,10 +28,20 @@ class RealmManager {
         }
     }
     
-    static func addSolution(in solution: Solution, with realm: Realm){
+    static func addSolution(in solution: Solution) {
         do {
-            try realm.write {
-                realm.add(solution)
+            try RealmManager.realm.write {
+                RealmManager.realm.add(solution)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    static func deleteSolution(in solution: Solution) {
+        do {
+            try RealmManager.realm.write {
+                RealmManager.realm.delete(solution)
             }
         } catch {
             print(error.localizedDescription)

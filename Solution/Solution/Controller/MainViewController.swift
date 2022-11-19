@@ -40,6 +40,7 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         bindSolution()
+        addObserver()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -48,7 +49,7 @@ class MainViewController: UIViewController {
     }
     // MARK: - DataFunction
     private func bindSolution() {
-        RealmManager.getSolution(in: realm)
+        RealmManager.getSolution()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] solution in
                 self?.solution = solution
@@ -89,6 +90,14 @@ class MainViewController: UIViewController {
     @objc func didTapAddSolutionButton() {
         let addView = AddViewController()
         self.navigationController?.pushViewController(addView, animated: true)
+    }
+    
+    @objc func didDeleteSolution() {
+        bindSolution()
+    }
+    // MARK: - Observer
+    private func addObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(didDeleteSolution), name: Notification.Name("delete"), object: nil)
     }
 }
 

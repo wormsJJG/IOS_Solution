@@ -64,6 +64,7 @@ class OptionCell: UICollectionViewCell {
     
     private func configureDeleteButton() {
         self.addSubview(deleteButton)
+        addDeleteAction()
         
         deleteButton.snp.makeConstraints { button in
             button.left.equalTo(self.optionLabel.snp.right).offset(5)
@@ -71,5 +72,14 @@ class OptionCell: UICollectionViewCell {
             button.right.equalTo(self.safeAreaLayoutGuide.snp.right).offset(-8)
             button.bottom.equalTo(self.safeAreaLayoutGuide.snp.bottom).offset(-8)
         }
+    }
+    
+    private func addDeleteAction() {
+        self.deleteButton.addTarget(self, action: #selector(didTapDelete), for: .touchDown)
+    }
+    
+    // MARK: - Action
+    @objc private func didTapDelete() {
+        NotificationCenter.default.post(name: Notification.Name("optionDelete"), object: nil, userInfo: ["option": optionLabel.text!])
     }
 }

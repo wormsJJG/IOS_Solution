@@ -63,6 +63,7 @@ class AddViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         configureDelegate()
+        addObserver()
     }
     
     // MARK: - Configure
@@ -83,6 +84,7 @@ class AddViewController: UIViewController {
         self.navigationItem.title = "고민추가"
         addSolutionButton.addTarget(self, action: #selector(didTapPlusSolution), for: .touchDown)
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addSolutionButton)
+        self.addSolutionButton.isEnabled = false
         self.navigationController?.navigationBar.tintColor = UIColor.navigationTitleColor
     }
     
@@ -126,15 +128,29 @@ class AddViewController: UIViewController {
             collectionView.bottom.equalTo(self.view.snp.bottom)
         }
     }
+    
+    // MARK: - Observer
+    private func addObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(didTapOptionDelete(_:)), name: Notification.Name("optionDelete"), object: nil)
+    }
+    
     // MARK: - Action
-    @objc func didTapPlusSolution() {
+    @objc private func didTapPlusSolution() {
         let solution = Solution()
         solution.title = solutionTitle
         solution.options.append(objectsIn: optionList)
         DispatchQueue.main.async { [self] in
-            RealmManager.addSolution(in: solution, with: self.realm)
+            RealmManager.addSolution(in: solution)
             navigationController?.popViewController(animated: true)
         }
+    }
+    
+    @objc private func didTapOptionDelete(_ notification: Notification) {
+        let option = notification.userInfo!["option"] as! String
+        let index = self.optionList.firstIndex(of: option)!
+        
+        self.optionList.remove(at: index)
+        self.optionCollectionView.reloadData()
     }
 }
 
@@ -194,10 +210,11 @@ extension AddViewController: UITextFieldDelegate {
         textField.resignFirstResponder()
         return true
     }
+    
     func textFieldDidEndEditing(_ textField: UITextField) {
         switch textField {
         case self.titleTextField:
-            self.solutionTitle = textField.text!
+            print(titleTextField.text! == self.solutionTitle)
         case self.optionTextField:
             self.optionList.append(textField.text!)
             DispatchQueue.main.async {
@@ -206,6 +223,18 @@ extension AddViewController: UITextFieldDelegate {
             }
         default:
             return
+        }
+    }
+    
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        if textField == self.titleTextField {
+            self.solutionTitle = textField.text!
+        } else {
+            if solutionTitle != "" && optionList.count != 0 {
+                self.addSolutionButton.isEnabled = true
+            } else {
+                self.addSolutionButton.isEnabled = false
+            }
         }
     }
 }

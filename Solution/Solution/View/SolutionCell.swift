@@ -76,7 +76,10 @@ class SolutionCell: UICollectionViewCell {
     
     private func configureMenuButton() {
         let deleteSolution = UIAction(title: "고민 삭제", handler: { _ in
-            print("삭제 액션")
+            guard let cellSolution = self.solution else { return }
+            
+            RealmManager.deleteSolution(in: cellSolution)
+            NotificationCenter.default.post(name: Notification.Name("delete"), object: nil, userInfo: nil)
         })
         let cancel = UIAction(title: "취소", handler: { _ in
             
