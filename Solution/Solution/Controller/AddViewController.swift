@@ -169,6 +169,8 @@ class AddViewController: UIViewController {
     @objc private func didTapSaveButton() {
         RealmManager.updateSolution(before: solution!, title: solutionTitle, options: optionList)
         NotificationCenter.default.post(name: Notification.Name("edit"), object: nil, userInfo: ["title": self.titleTextField.text!])
+        self.solution = nil
+        self.isAdding = true
         self.navigationController?.popViewController(animated: true)
     }
 }
