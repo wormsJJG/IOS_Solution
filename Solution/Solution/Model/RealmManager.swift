@@ -12,7 +12,7 @@ import RxSwift
 class RealmManager {
     static let realm = try! Realm()
     
-    static func getSolution() -> Observable<[Solution]>  {
+    static func getSolutionList() -> Observable<[Solution]>  {
         return Observable.create { event in
             let solution = RealmManager.realm.objects(Solution.self).map({$0})
             
@@ -42,6 +42,47 @@ class RealmManager {
         do {
             try RealmManager.realm.write {
                 RealmManager.realm.delete(solution)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    static func deleteOption(in solution: Solution, with index: Int) {
+        do {
+            try RealmManager.realm.write {
+                solution.options.remove(at: index)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    static func getSolution(title: String) -> Observable<Solution> {
+        return Observable.create { event in
+            let solution = RealmManager.realm.objects(Solution.self).filter { $0.title == title }
+            
+            if let sol = solution.first {
+                event.onNext(sol)
+                event.onCompleted()
+            } else {
+                event.onError(RealmError.notFoundData)
+            }
+            return Disposables.create {
+                
+            }
+        }
+    }
+    
+    static func updateSolution(before: Solution, title: String, options: [String]) {
+        do {
+            let new = Solution()
+            new.title = title
+            new.options.append(objectsIn: options)
+            try RealmManager.realm.write {
+                before.title = new.title
+                before.options.removeAll()
+                before.options.append(objectsIn: options)
             }
         } catch {
             print(error.localizedDescription)

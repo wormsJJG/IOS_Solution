@@ -13,9 +13,12 @@ import RealmSwift
 
 class AddViewController: UIViewController {
     private let cellID: String = "OptionCell"
-    private let realm = try! Realm()
-    private var solutionTitle: String = ""
-    private var optionList: [String] = []
+    var solutionTitle: String = ""
+    var optionList: [String] = []
+    var solution: Solution?
+    private var beforeText: String = ""
+    private var isEdit: Bool = false
+    var isAdding: Bool = true
     // MARK: - UI Component
     private let addSolutionButton: UIButton = {
         let button = UIButton().then {
@@ -81,15 +84,25 @@ class AddViewController: UIViewController {
     }
     
     private func configureNavigationItem() {
-        self.navigationItem.title = "고민추가"
-        addSolutionButton.addTarget(self, action: #selector(didTapPlusSolution), for: .touchDown)
+        if self.isAdding {
+            self.navigationItem.title = "고민추가"
+            addSolutionButton.addTarget(self, action: #selector(didTapPlusSolution), for: .touchDown)
+            self.addSolutionButton.isEnabled = false
+        } else {
+            self.navigationItem.title = "고민수정"
+            self.addSolutionButton.setTitle("저장하기", for: .normal)
+            self.addSolutionButton.addTarget(self, action: #selector(didTapSaveButton), for: .touchDown)
+        }
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addSolutionButton)
-        self.addSolutionButton.isEnabled = false
         self.navigationController?.navigationBar.tintColor = UIColor.navigationTitleColor
     }
     
     private func configureTitleTextField() {
         self.view.addSubview(titleTextField)
+        
+        if !isAdding {
+            self.titleTextField.text = title
+        }
         
         titleTextField.snp.makeConstraints { textField in
             textField.top.equalTo(self.view.safeAreaLayoutGuide.snp.top).offset(20)
@@ -152,10 +165,21 @@ class AddViewController: UIViewController {
         self.optionList.remove(at: index)
         self.optionCollectionView.reloadData()
     }
+    
+    @objc private func didTapSaveButton() {
+        RealmManager.updateSolution(before: solution!, title: solutionTitle, options: optionList)
+        NotificationCenter.default.post(name: Notification.Name("edit"), object: nil, userInfo: ["title": self.titleTextField.text!])
+        self.navigationController?.popViewController(animated: true)
+    }
 }
 
 extension AddViewController: UICollectionViewDelegate {
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let cell = collectionView.cellForItem(at: indexPath) as! OptionCell
+        self.isEdit = true
+        self.beforeText = cell.returnOption()
+        self.optionTextField.text = cell.returnOption()
+    }
 }
 
 extension AddViewController: UICollectionViewDataSource {
@@ -216,10 +240,22 @@ extension AddViewController: UITextFieldDelegate {
         case self.titleTextField:
             print(titleTextField.text! == self.solutionTitle)
         case self.optionTextField:
-            self.optionList.append(textField.text!)
-            DispatchQueue.main.async {
-                self.optionCollectionView.reloadData()
-                self.optionTextField.text = ""
+            if self.isEdit {
+                let index = self.optionList.firstIndex(of: self.beforeText)!
+                
+                self.optionList[index] = textField.text!
+                
+                DispatchQueue.main.async {
+                    self.isEdit = false
+                    self.optionCollectionView.reloadData()
+                    self.optionTextField.text = ""
+                }
+            } else {
+                self.optionList.append(textField.text!)
+                DispatchQueue.main.async {
+                    self.optionCollectionView.reloadData()
+                    self.optionTextField.text = ""
+                }
             }
         default:
             return

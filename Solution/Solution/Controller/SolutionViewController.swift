@@ -6,10 +6,13 @@
 //
 
 import UIKit
+import RxSwift
+import Then
 
 class SolutionViewController: UIViewController {
     private let cellID: String = "OptionCell"
     var solution: Solution?
+    var disposeBag = DisposeBag()
     // MARK: - UI Component
     private let optionCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: CollectionViewLeftAlignFlowLayout())
@@ -20,6 +23,15 @@ class SolutionViewController: UIViewController {
     private let pickButton: UIButton = {
         let button = UIButton().then {
             $0.setTitle("뽑기", for: .normal)
+            $0.setTitleColor(.navigationTitleColor, for: .normal)
+        }
+        
+        return button
+    }()
+    
+    private let editButton: UIButton = {
+        let button = UIButton().then {
+            $0.setTitle("편집", for: .normal)
             $0.setTitleColor(.navigationTitleColor, for: .normal)
         }
         
@@ -36,6 +48,7 @@ class SolutionViewController: UIViewController {
         self.view.backgroundColor = .white
         configureNavigationItem()
         configureOptionCollectionView()
+        addObserver()
     }
     
     private func configureNavigationItem() {
@@ -47,7 +60,9 @@ class SolutionViewController: UIViewController {
         }
         self.navigationController?.navigationBar.tintColor = UIColor.navigationTitleColor
         self.navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: UIColor.navigationTitleColor!]
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: self.pickButton)
+        self.pickButton.addTarget(self, action: #selector(didTapRandomOption), for: .touchDown)
+        self.editButton.addTarget(self, action: #selector(didTapEditButton), for: .touchDown)
+        self.navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: self.pickButton), UIBarButtonItem(customView: self.editButton)]
     }
     
     private func configureOptionCollectionView() {
@@ -69,9 +84,65 @@ class SolutionViewController: UIViewController {
             collectionView.bottom.equalTo(self.view.snp.bottom)
         }
     }
+    // MARK: - Action
+    @objc private func didTapRandomOption() {
+        let alert = UIAlertController(title: "당신의 \(solution!.title)(은)는", message: "", preferredStyle: UIAlertController.Style.alert)
+        let okAction = UIAlertAction(title: "확인", style: .default) { (action) in }
+            alert.addAction(okAction)
+        let messageFontSize = [NSAttributedString.Key.font: UIFont(name: "Helvetica", size: 40)]
+        let messageString = NSAttributedString(string: "\n\(solution!.options.randomElement()!)", attributes: messageFontSize as [NSAttributedString.Key : Any])
+            alert.setValue(messageString, forKey: "attributedMessage")
+        present(alert, animated: false, completion: nil)
+    }
+    
+    @objc private func didDeleteOption(_ notification: Notification) {
+        let option = notification.userInfo!["option"] as! String
+        let index = solution!.options.firstIndex(of: option)!
+        
+        RealmManager.deleteOption(in: solution!, with: index)
+        
+        RealmManager.getSolution(title: solution!.title)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] solution in
+                self?.solution = solution
+                self?.optionCollectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    @objc private func didTapEditButton() {
+        let editVC = AddViewController()
+        editVC.isAdding = false
+        editVC.title = solution!.title
+        editVC.solutionTitle = solution!.title
+        var arr: [String] = []
+        for option in solution!.options {
+            arr.append(option)
+        }
+        editVC.optionList = arr
+        editVC.solution = solution!
+        self.navigationController?.pushViewController(editVC, animated: true)
+    }
+    
+    @objc private func didEdit(_ notification: Notification) {
+        let solutionTitle = notification.userInfo!["title"] as! String
+        
+        RealmManager.getSolution(title: solutionTitle)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] solution in
+                self?.title = solutionTitle
+                self?.solution = solution
+                self?.optionCollectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+    }
+    // MARK: - Observer
+    private func addObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(didDeleteOption(_ :)), name: Notification.Name("optionDelete"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(didEdit(_ :)), name: Notification.Name("edit"), object: nil)
+    }
 }
 extension SolutionViewController: UICollectionViewDelegate {
-    
 }
 extension SolutionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {

@@ -82,4 +82,8 @@ class OptionCell: UICollectionViewCell {
     @objc private func didTapDelete() {
         NotificationCenter.default.post(name: Notification.Name("optionDelete"), object: nil, userInfo: ["option": optionLabel.text!])
     }
+    // MARK: - 외부 접근 함수
+    func returnOption() -> String {
+        return optionLabel.text!
+    }
 }

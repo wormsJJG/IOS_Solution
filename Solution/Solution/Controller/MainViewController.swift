@@ -49,7 +49,7 @@ class MainViewController: UIViewController {
     }
     // MARK: - DataFunction
     private func bindSolution() {
-        RealmManager.getSolution()
+        RealmManager.getSolutionList()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] solution in
                 self?.solution = solution
